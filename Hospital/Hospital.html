@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Hastane Yönetim Sistemi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        form {
+            margin: 20px auto;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        input[type="date"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Faker/3.1.0/faker.min.js"></script> <!-- Faker'i ekleyin -->
+    <script>
+        // Sınıflar
+     // Sınıflar için ID sayaçları
+let doctorIDCounter = 1;
+let patientIDCounter = 1;
+let appointmentIDCounter = 1;
+let medicalReportIDCounter = 1;
+
+class Doctor {
+    constructor(name, department, username, password) {
+        this.id = doctorIDCounter++; // Benzersiz doktor ID'si
+        this.name = name;
+        this.department = department;
+        this.username = username;
+        this.password = password;
+    }
+
+    doctorInfo() {
+        return `ID: ${this.id}, İsim: ${this.name}, Bölüm: ${this.department}`;
+    }
+
+    fullName() {
+        return this.name; // Doktorun tam adını döndürür
+    }
+
+    checkCredentials(username, password) {
+        return this.username === username && this.password === password;
+    }
+}
+
+class Patient {
+    constructor(firstName, lastName, age, gender, password) {
+        this.id = patientIDCounter++; // Benzersiz hasta ID'si
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+        this.gender = gender;
+        this.password = password;
+    }
+
+    fullName() {
+        return `ID: ${this.id}, İsim: ${this.firstName} ${this.lastName}`;
+    }
+}
+
+class Appointment {
+    constructor(appointmentID, appointmentDate, appointmentTime, doctor, patient) {
+        this.id = appointmentIDCounter++; // Benzersiz randevu ID'si
+        this.appointmentID = appointmentID;
+        this.appointmentDate = appointmentDate;
+        this.appointmentTime = appointmentTime;
+        this.doctor = doctor;
+        this.patient = patient;
+    }
+
+    appointmentInfo() {
+        return `Randevu ID: ${this.id}, Tarih: ${this.appointmentDate}, Saat: ${this.appointmentTime}, Doktor: ${this.doctor.doctorInfo()}, Hasta: ${this.patient.fullName()}`;
+    }
+}
+
+class MedicalReport {
+    constructor(reportID, reportDate, reportContent, patient,doctor) {
+        this.id = medicalReportIDCounter++; // Benzersiz rapor ID'si
+        this.reportID = reportID;
+        this.reportDate = reportDate;
+        this.reportContent = reportContent;
+        this.patient = patient;
+        this.doctor = doctor;
+    }
+
+    reportInfo() {
+    return (
+        `Rapor ID: ${this.id}, Tarih: ${this.reportDate}, İçerik: ${this.reportContent}, ` +
+        `Hasta: ${this.patient.fullName()}, Doktor: ${this.doctor.doctorInfo()}`
+    );
+}
+
+}
+
+// Kodunuzun geri kalanı burada devam ediyor...
+
+
+        const departments = [
+    "Dahiliye",
+    "Kardiyoloji",
+    "Nöroloji",
+    "Ortopedi",
+    "Göğüs Hastalıkları",
+];
+
+        class Database {
+            constructor() {
+                this.doctors = [];
+                this.patients = [];
+                this.appointments = [];
+                this.medicalReports = [];
+            }
+
+            addDoctor(doctor) {
+                this.doctors.push(doctor);
+            }
+
+            addPatient(patient) {
+                this.patients.push(patient);
+            }
+
+            addAppointment(appointment) {
+                this.appointments.push(appointment);
+            }
+
+            addMedicalReport(report) {
+                this.medicalReports.push(report);
+            }
+
+            findDoctor(username, password) {
+                return this.doctors.find(doc => doc.checkCredentials(username, password));
+            }
+
+            findPatient(firstName, password) {
+                return this.patients.find(pat => pat.firstName === firstName && pat.password === password);
+            }
+
+            getPatientAppointments(patient) {
+                return this.appointments.filter(app => app.patient === patient);
+            }
+
+            getPatientReports(patient) {
+                return this.medicalReports.filter(rep => rep.patient === patient);
+            }
+
+            getDoctorByName(name) {
+                return this.doctors.find(doc => doc.name === name);
+            }
+
+            addNewAppointment(date, time, doctor, patient) {
+                const newID = this.appointments.length + 1;
+                const newAppointment = new Appointment(newID, date, time, doctor, patient);
+                this.addAppointment(newAppointment);
+            }
+
+            removeAppointment(appointmentID) {
+                this.appointments = this.appointments.filter(app => app.appointmentID !== appointmentID);
+            }
+            
+        }
+
+        const database = new Database();
+
+        // Faker kullanarak rastgele doktorlar oluşturun
+        for (let i = 0; i < 50; i++) {
+            const name = `Dr. ${faker.name.findName()}`; // "Dr." ekleyin
+            const department = faker.random.arrayElement(departments); // Uzmanlık alanlarını bu listeden seçin
+            const username = faker.internet.userName();
+            const password = faker.internet.password();
+            const newDoctor = new Doctor(name, department, username, password);
+    database.addDoctor(newDoctor);
+}
+
+        // Faker kullanarak rastgele hastalar oluşturun
+        for (let i = 0; i < 1000; i++) {
+            const firstName = faker.name.firstName();
+            const lastName = faker.name.lastName();
+            const age = faker.random.number({ min: 20, max: 70 });
+            const gender = faker.random.boolean() ? "Erkek" : "Kadın";
+            const password = faker.internet.password();
+            const newPatient = new Patient(firstName, lastName, age, gender, password);
+            database.addPatient(newPatient);
+        }
+
+        const doctor1 = new Doctor("Dr. Ferhat Tunç", "Dahiliye", "fero", "1234");
+        const doctor2 = new Doctor("Dr. Ümit Dansuk", "Kardiyoloji", "ümido", "abcd");
+        const doctor3 = new Doctor("Dr. Muhammed Gül", "Ortopedi", "mıhemmed", "xyz789");
+        const doctor4 = new Doctor("Dr. Meral Şen", "Nöroloji", "meral", "789xyz");
+        const doctor5 = new Doctor("Dr. Hasan Muslan", "Göğüs Hastalıkları", "heso", "password");
+
+        database.addDoctor(doctor1);
+        database.addDoctor(doctor2);
+        database.addDoctor(doctor3);
+        database.addDoctor(doctor4);
+        database.addDoctor(doctor5);
+
+        const patient1 = new Patient("Ali", "Yılmaz", 30, "Erkek", "1234");
+        const patient2 = new Patient("Ahmet", "Kara", 28, "Erkek", "abcd");
+        const patient3 = new Patient("Zeynep", "Doğan", 25, "Kadın", "xyz789");
+        const patient4 = new Patient("Mehmet", "Demir", 32, "Erkek", "789xyz");
+        const patient5 = new Patient("Fatma", "Gül", 27, "Kadın", "password");
+
+        database.addPatient(patient1);
+        database.addPatient(patient2);
+        database.addPatient(patient3);
+        database.addPatient(patient4);
+        database.addPatient(patient5);
+
+        const appointment1 = new Appointment(1, "2024-05-10", "10:30", doctor1, patient1);
+        const appointment2 = new Appointment(2, "2024-05-12", "14:00", doctor3, patient2);
+
+        database.addAppointment(appointment1);
+        database.addAppointment(appointment2);
+
+        let loggedDoctor = null;
+        let loggedPatient = null;
+
+        // Faker kullanarak her hasta için rastgele randevular oluşturun
+// Hastalar için rastgele randevular oluşturma fonksiyonu
+function createRandomAppointmentsForPatients() {
+    const startDate = new Date("2024-05-01");
+    const endDate = new Date("2024-06-01");
+    const minimumAppointments = 10;
+
+    database.patients.forEach((patient) => {
+        // Hastanın mevcut randevu sayısını kontrol edin
+        let currentAppointmentCount = database.getPatientAppointments(patient).length;
+
+        // Mevcut hastanın zaten randevu aldığı doktorları belirleyin
+        const doctorsWithAppointments = database
+            .getPatientAppointments(patient)
+            .map((appointment) => appointment.doctor);
+
+        while (currentAppointmentCount < minimumAppointments) {
+            // Hastanın daha önce randevu almadığı doktorları seçin
+            const availableDoctors = database.doctors.filter(
+                (doctor) => !doctorsWithAppointments.includes(doctor)
+            );
+
+            if (availableDoctors.length === 0) {
+                console.warn("Hastanın randevu alabileceği başka doktor kalmadı.");
+                break;
+            }
+
+            const randomDoctor = faker.random.arrayElement(availableDoctors);
+
+            const randomDate = faker.date.between(startDate, endDate);
+            const appointmentDate = randomDate.toISOString().split("T")[0];
+            const appointmentTime = faker.date.recent(1).toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+
+            // Yeni randevuyu oluşturun ve ekleyin
+            const newAppointment = new Appointment(
+                database.appointments.length + 1,
+                appointmentDate,
+                appointmentTime,
+                randomDoctor,
+                patient
+            );
+
+            database.addAppointment(newAppointment);
+            currentAppointmentCount++;
+            doctorsWithAppointments.push(randomDoctor); // Doktoru listeye ekleyin
+        }
+    });
+}
+// Tıbbi rapor oluşturma fonksiyonu
+function createRandomMedicalReportsForPatients() {
+    const startDate = new Date("2023-01-01");
+    const endDate = new Date("2024-12-31");
+
+    // Her hasta için rapor oluştur
+    database.patients.forEach(patient => {
+        // Hastanın mevcut rapor aldığı doktorları belirleyin
+        const doctorsWithReports = database.getPatientReports(patient).map(rep => rep.doctor);
+
+        // Her hasta için iki tıbbi rapor oluştur
+        for (let i = 0; i < 3; i++) {
+            // Hastanın rapor aldığı doktorları hariç tutarak rastgele bir doktor seçin
+            const availableDoctors = database.doctors.filter(
+                (doctor) => !doctorsWithReports.includes(doctor)
+            );
+
+            if (availableDoctors.length === 0) {
+                console.warn("Hastanın rapor alabileceği başka doktor kalmadı.");
+                break;
+            }
+
+            const randomDoctor = faker.random.arrayElement(availableDoctors);
+
+            const randomDate = faker.date.between(startDate, endDate);
+            const reportDate = randomDate.toISOString().split("T")[0];
+            const reportContent = faker.lorem.sentence(); // Rastgele rapor içeriği
+
+            // Yeni tıbbi raporu oluştur ve ekle
+            const newMedicalReport = new MedicalReport(
+                database.medicalReports.length + 1,
+                reportDate,
+                reportContent,
+                patient,
+                randomDoctor // Doktoru burada ekliyoruz
+            );
+
+            database.addMedicalReport(newMedicalReport);
+            doctorsWithReports.push(randomDoctor); // Doktoru listeye ekleyin
+        }
+    });
+}
+
+
+// Hastalar için tıbbi raporları oluştur
+createRandomMedicalReportsForPatients();
+
+
+
+// Hastalar için en az 4 randevu oluştur
+createRandomAppointmentsForPatients();
+
+
+        function doctorLoginForm() {
+            const formHtml = `
+                <form id="doctorLoginForm" onsubmit="doctorLogin(event)">
+                    <label for="doctorUsername">Kullanıcı Adı:</label>
+                    <input type="text" id="doctorUsername" required><br>
+                    <label for="doctorPassword">Şifre:</label>
+                    <input type="password" id="doctorPassword" required><br>
+                    <button type="submit">Giriş Yap</button>
+                </form>
+            `;
+            document.body.innerHTML = formHtml;
+        }
+
+        function doctorLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById("doctorUsername").value;
+            const password = document.getElementById("doctorPassword").value;
+            const doctor = database.findDoctor(username, password);
+            if (doctor) {
+                alert(`Hoş geldiniz, ${doctor.doctorInfo()}!`);
+                loggedDoctor = doctor;
+                loadDoctorDashboard(); 
+            } else {
+                alert("Geçersiz kullanıcı adı veya şifre.");
+            }
+        }
+
+  // Doktor paneline rapor ekleme formu ekleyin
+function loadDoctorDashboard() {
+    const doctorAppointments = database.appointments.filter(app => app.doctor === loggedDoctor);
+
+    let dashboardHtml = `<h2>Hoş geldiniz, ${loggedDoctor.doctorInfo()}!</h2>`;
+
+    dashboardHtml += `<h3>Randevularınız:</h3>`;
+    if (doctorAppointments.length > 0) {
+        dashboardHtml += `<ul>`;
+        doctorAppointments.forEach(app => {
+            dashboardHtml += `<li>${app.appointmentInfo()} 
+                <button onclick="deleteDoctorAppointment(${app.id})">Sil</button>
+            </li>`;
+        });
+        dashboardHtml += `</ul>`;
+    } else {
+        dashboardHtml += `<p>Randevunuz yok.</p>`;
+    }
+
+    const doctorReports = database.medicalReports.filter(rep => rep.doctor === loggedDoctor);
+
+    dashboardHtml += `<h3>Tıbbi Raporlar:</h3>`;
+    if (doctorReports.length > 0) {
+        dashboardHtml += `<ul>`;
+        doctorReports.forEach(rep => {
+            dashboardHtml += `<li>${rep.reportInfo()} 
+                <button onclick="deleteDoctorMedicalReport(${rep.id})">Sil</button>
+            </li>`;
+        });
+        dashboardHtml += `</ul>`;
+    } else {
+        dashboardHtml += `<p>Tıbbi raporunuz yok.</p>`;
+    }
+
+    // Rapor ekleme formu
+    dashboardHtml += `
+        <h3>Yeni Tıbbi Rapor Ekle</h3>
+        <form onsubmit="addMedicalReport(event)">
+            <label for="reportPatient">Hasta:</label>
+            <select id="reportPatient" required>
+                ${database.patients.map(pat => `<option value="${pat.id}">${pat.fullName()}</option>`).join("")}
+            </select>
+            <label for="reportDate">Tarih:</label>
+            <input type="date" id="reportDate" required>
+            <label for="reportContent">İçerik:</label>
+            <textarea id="reportContent" required></textarea>
+            <button type="submit">Rapor Ekle</button>
+        </form>
+    `;
+
+    dashboardHtml += `<button onclick="mainPage()">Çıkış Yap</button>`;
+
+    document.body.innerHTML = dashboardHtml;
+}
+
+
+function deleteDoctorAppointment(appointmentID) {
+    database.removeAppointment(appointmentID);
+    alert("Randevu başarıyla silindi.");
+    loadDoctorDashboard();
+}
+
+function deleteDoctorMedicalReport(reportID) {
+    database.medicalReports = database.medicalReports.filter(rep => rep.id !== reportID);
+    alert("Tıbbi rapor başarıyla silindi.");
+    loadDoctorDashboard();
+}
+
+
+
+        function patientLoginForm() {
+            const formHtml = `
+                <form id="patientLoginForm" onsubmit="patientLogin(event)">
+                    <label for="patientFirstName">Adınız:</label>
+                    <input type="text" id="patientFirstName" required><br>
+                    <label for="patientPassword">Şifre:</label>
+                    <input type="password" id="patientPassword" required><br>
+                    <button type="submit">Giriş Yap</button>
+                </form>
+            `;
+            document.body.innerHTML = formHtml;
+        }
+
+        function patientLogin(event) {
+            event.preventDefault();
+            const firstName = document.getElementById("patientFirstName").value;
+            const password = document.getElementById("patientPassword").value;
+            const patient = database.findPatient(firstName, password);
+            if (patient) {
+                alert(`Hoş geldiniz, ${patient.fullName()}!`);
+                loggedPatient = patient;
+                loadPatientDashboard(); 
+            } else {
+                alert("Geçersiz ad veya şifre.");
+            }
+        }
+
+    function adminLogin() {
+            loadAdminDashboard(); // Yönetici dashboard'unu yükleyin
+    }
+    
+
+
+
+
+    
+    function loadAdminDashboard() {
+    let adminHtml = `<h2>Yönetici Paneli</h2>`;
+
+    // Doktorları listele ve silme formunu ekle
+    adminHtml += `<h3>Doktorlar:</h3>`;
+    adminHtml += `<form id="removeDoctorForm" onsubmit="removeDoctor(event)">
+                     <select id="doctorSelect" required>
+                         <option value="" disabled selected>Doktor Seç</option>`;
+    
+    // Tüm doktorları listele
+    database.doctors.forEach(doc => {
+        adminHtml += `<option value="${doc.id}">${doc.doctorInfo()}</option>`;
+    });
+    
+    adminHtml += `</select>
+                   <button type="submit">Doktoru Sil</button>
+                   </form>`;
+
+    // Hastaları listele ve silme formunu ekle
+    adminHtml += `<h3>Hastalar:</h3>`;
+    adminHtml += `<form id="removePatientForm" onsubmit="removePatient(event)">
+                     <select id="patientSelect" required>
+                         <option value="" disabled selected>Hasta Seç</option>`;
+    
+    // Tüm hastaları listele
+    database.patients.forEach(pat => {
+        adminHtml += `<option value="${pat.id}">${pat.fullName()}</option>`;
+    });
+    
+    adminHtml += `</select>
+                   <button type="submit">Hastayı Sil</button>
+                   </form>`;
+
+    // Yeni ekle: Doktor ve hasta ekleme formu ve düğmeleri
+    adminHtml += `<h3>Doktor Ekle</h3>`;
+    adminHtml += `<form onsubmit="addDoctor(event)">
+                        <label for="doctorName">Adı:</label>
+                        <input type="text" id="doctorName" required><br>
+                        <label for="doctorDepartment">Bölüm:</label>
+                        <input type="text" id="doctorDepartment" required><br>
+                        <label for="doctorUsername">Kullanıcı Adı:</label>
+                        <input type="text" id="doctorUsername" required><br>
+                        <label for="doctorPassword">Şifre:</label>
+                        <input type="password" id="doctorPassword" required><br>
+                        <button type="submit">Doktoru Ekle</button>
+                    </form>`;
+
+    adminHtml += `<h3>Hasta Ekle</h3>`;
+    adminHtml += `<form onsubmit="addPatient(event)">
+                        <label for="patientFirstName">Adı:</label>
+                        <input type="text" id="patientFirstName" required><br>
+                        <label for="patientLastName">Soyadı:</label>
+                        <input type="text" id="patientLastName" required><br>
+                        <label for="patientAge">Yaşı:</label>
+                        <input type="number" id="patientAge" required><br>
+                        <label for="patientGender">Cinsiyeti:</label>
+                        <select id="patientGender" required>
+                            <option value="Erkek">Erkek</option>
+                            <option value="Kadın">Kadın</option>
+                        </select><br>
+                        <label for="patientPassword">Şifre:</label>
+                        <input type="password" id="patientPassword" required><br>
+                        <button type="submit">Hastayı Ekle</button>
+                    </form>`;
+
+    adminHtml += `<button onclick="mainPage()">Çıkış Yap</button>`;
+
+    document.body.innerHTML = adminHtml;
+}
+
+
+// Hasta ekleme fonksiyonu
+function addPatient(event) {
+    event.preventDefault();
+    const firstName = document.getElementById("patientFirstName").value;
+    const lastName = document.getElementById("patientLastName").value;
+    const age = parseInt(document.getElementById("patientAge").value, 10);
+    const gender = document.getElementById("patientGender").value;
+    const password = document.getElementById("patientPassword").value;
+
+    const newPatient = new Patient(firstName, lastName, age, gender, password);
+    database.addPatient(newPatient);
+
+    alert("Hasta başarıyla eklendi!");
+    loadAdminDashboard(); // Paneli güncelle
+}
+
+
+
+
+function mainPage() {
+    const initialHtml = `
+        <h1>Hastane Yönetim Sistemi</h1>
+        <button onclick="patientLoginForm()">Hasta Giriş</button>
+        <button onclick="loadPatientRegistrationForm()">Yeni Hasta Kaydı</button>
+        <button onclick="doctorLoginForm()">Doktor Giriş</button>
+        <button onclick="adminLogin()">Yönetici Giriş</button>
+    `;
+    document.body.innerHTML = initialHtml;
+}
+
+// Tıbbi rapor ekleme fonksiyonu
+// Tıbbi rapor ekleme fonksiyonu
+function addMedicalReport(event) {
+    event.preventDefault();
+    const reportDate = document.getElementById("reportDate").value;
+    const reportContent = document.getElementById("reportContent").value;
+    const patientID = parseInt(document.getElementById("reportPatient").value, 10);
+
+    const selectedPatient = database.patients.find(pat => pat.id === patientID);
+
+    if (selectedPatient) {
+        const newMedicalReport = new MedicalReport(
+            database.medicalReports.length + 1,
+            reportDate,
+            reportContent,
+            selectedPatient,
+            loggedDoctor
+        );
+
+        database.addMedicalReport(newMedicalReport);
+
+        alert("Tıbbi rapor başarıyla eklendi.");
+        loadDoctorDashboard(); // Doktor panelini yeniden yükleyin
+    } else {
+        alert("Hasta bulunamadı.");
+    }
+}
+
+
+
+   // Hasta panelinde raporları gösterin
+   function loadPatientDashboard() {
+    const appointments = database.getPatientAppointments(loggedPatient);
+
+    let dashboardHtml = `<h2>Hoş geldiniz, ${loggedPatient.fullName()}!</h2>`;
+
+    dashboardHtml += `<h3>Randevularınız:</h3>`;
+    if (appointments.length > 0) {
+        dashboardHtml += `<ul>`;
+        appointments.forEach(app => {
+            dashboardHtml += `<li>${app.appointmentInfo()} 
+                <button onclick="deleteAppointment(${app.appointmentID})">Sil</button>
+            </li>`;
+        });
+        dashboardHtml += `</ul>`;
+    } else {
+        dashboardHtml += `<p>Randevunuz yok.</p>`;
+    }
+
+    // Randevu alma formu
+    dashboardHtml += `<h3>Yeni Randevu Al</h3>
+        <form onsubmit="addAppointment(event)">
+            <label for="appointmentDoctor">Doktor:</label>
+            <select id="appointmentDoctor" required>
+                ${database.doctors.map(doc => `<option value="${doc.name}">${doc.doctorInfo()}</option>`).join("")}
+            </select>
+            <label for="appointmentDate">Tarih:</label>
+            <input type="date" id="appointmentDate" required>
+            <label for="appointmentTime">Saat:</label>
+            <input type="time" id="appointmentTime" required>
+            <button type="submit">Randevu Al</button>
+        </form>`;
+
+    dashboardHtml += `<button onclick="mainPage()">Çıkış Yap</button>`;
+
+    document.body.innerHTML = dashboardHtml;
+}
+
+
+
+
+
+function registerPatient(event) {
+    event.preventDefault();
+    
+    const firstName = document.getElementById("firstName").value;
+    const lastName = document.getElementById("lastName").value;
+    const age = parseInt(document.getElementById("age"), 10);
+    const gender = document.getElementById("gender").value;
+    const password = document.getElementById("password").value;
+    
+    const newPatient = new Patient(firstName, lastName, age, gender, password);
+    
+    database.addPatient(newPatient);
+    
+    alert("Hasta başarıyla kaydedildi!");
+    mainPage(); // Ana sayfaya geri dön
+}
+
+
+// Çakışma kontrolü
+// Çakışma kontrolü
+function isAppointmentConflict(doctor, date, time) {
+    // Aynı doktor, aynı tarih ve saatte randevusu var mı?
+    return database.appointments.some(app => 
+        app.doctor === doctor && 
+        app.appointmentDate === date && 
+        app.appointmentTime === time
+    );
+}
+
+function addAppointment(event) {
+    event.preventDefault();
+
+    if (!loggedPatient) {
+        alert("Randevu almak için oturum açmalısınız.");
+        return; // Oturum açmamışsa randevu alınamaz
+    }
+    
+    const doctorName = document.getElementById("appointmentDoctor").value;
+    const date = document.getElementById("appointmentDate").value;
+    const time = document.getElementById("appointmentTime").value;
+
+    // Geçerli doktoru kontrol et
+    const selectedDoctor = database.getDoctorByName(doctorName);
+
+    if (!selectedDoctor) {
+        alert("Seçilen doktor bulunamadı.");
+        return; // Doktor bulunamazsa randevu alınamaz
+    }
+
+    // Geçerli tarih ve saat kontrolü
+    if (!date || !time) {
+        alert("Geçerli bir tarih ve saat girin.");
+        return; // Tarih ve saat girilmediyse randevu alınamaz
+    }
+
+    // Yeni randevu oluştur
+    const newAppointment = new Appointment(
+        database.appointments.length + 1,
+        date,
+        time,
+        selectedDoctor,
+        loggedPatient
+    );
+
+    // Randevuyu veritabanına ekle
+    database.addAppointment(newAppointment);
+    
+    alert("Randevu başarıyla alındı.");
+    loadPatientDashboard(); // Hasta panelini yeniden yükleyin
+}
+
+
+
+
+
+
+
+
+        function deleteAppointment(appointmentID) {
+            database.removeAppointment(appointmentID);
+            alert("Randevu başarıyla silindi.");
+            loadPatientDashboard(); 
+        }
+
+
+
+  // Fonksiyonlar
+  function removeDoctor(event) {
+    event.preventDefault(); // Formun submit olayını engelle
+
+    const doctorID = document.getElementById("doctorSelect").value;
+
+    // Doktorun ilişkili randevularını bulun
+    const relatedAppointments = database.appointments.filter(app => app.doctor.id === parseInt(doctorID));
+
+    // İlişkili randevuları silin
+    database.appointments = database.appointments.filter(app => app.doctor.id !== parseInt(doctorID));
+
+    // Doktoru silin
+    database.doctors = database.doctors.filter(doc => doc.id !== parseInt(doctorID));
+
+    alert(`Doktor başarıyla kaldırıldı ve ilişkili ${relatedAppointments.length} randevu silindi.`);
+
+    loadAdminDashboard(); // Yönetici panelini yeniden yükleyin
+}
+
+
+
+
+
+
+function removePatient(event) {
+    event.preventDefault(); // Formun submit olayını engelle
+
+    const patientID = document.getElementById("patientSelect").value;
+
+    // Hastanın ilişkili randevularını bulun
+    const relatedAppointments = database.appointments.filter(app => app.patient.id === parseInt(patientID));
+
+    // İlişkili randevuları silin
+    database.appointments = database.appointments.filter(app => app.patient.id !== parseInt(patientID));
+
+    // Hastayı silin
+    database.patients = database.patients.filter(pat => pat.id !== parseInt(patientID));
+
+    alert(`Hasta başarıyla kaldırıldı ve ilişkili ${relatedAppointments.length} randevu silindi.`);
+
+    loadAdminDashboard(); // Yönetici panelini yeniden yükleyin
+}
+
+
+
+
+
+
+// Yönetici paneli için güncellenmiş HTML
+function loadPatientDashboard() {
+    const appointments = database.getPatientAppointments(loggedPatient);
+    const medicalReports = database.medicalReports.filter(rep => rep.patient === loggedPatient);
+
+    let dashboardHtml = `<h2>Hoş geldiniz, ${loggedPatient.fullName()}!</h2>`;
+
+    dashboardHtml += `<h3>Randevularınız:</h3>`;
+    if (appointments.length > 0) {
+        dashboardHtml += `<ul>`;
+        appointments.forEach(app => {
+            dashboardHtml += `<li>${app.appointmentInfo()} 
+                <button onclick="deleteAppointment(${app.appointmentID})">Sil</button>
+            </li>`;
+        });
+        dashboardHtml += `</ul>`;
+    } else {
+        dashboardHtml += `<p>Randevunuz yok.</p>`;
+    }
+
+    // Tıbbi raporları göster
+    dashboardHtml += `<h3>Tıbbi Raporlarınız:</h3>`;
+    if (medicalReports.length > 0) {
+        dashboardHtml += `<ul>`;
+        medicalReports.forEach(rep => {
+            dashboardHtml += `<li>${rep.reportInfo()}</li>`;
+        });
+        dashboardHtml += `</ul>`;
+    } else {
+        dashboardHtml += `<p>Tıbbi raporunuz yok.</p>`;
+    }
+
+    // Yeni randevu alma formu
+    dashboardHtml += `<h3>Yeni Randevu Al</h3>
+        <form onsubmit="addAppointment(event)">
+            <label for="appointmentDoctor">Doktor:</label>
+            <select id="appointmentDoctor" required>
+                ${database.doctors.map(doc => `<option value="${doc.name}">${doc.doctorInfo()}</option>`).join("")}
+            </select>
+            <label for="appointmentDate">Tarih:</label>
+            <input type="date" id="appointmentDate" required>
+            <label for="appointmentTime">Saat:</label>
+            <input type="time" id="appointmentTime" required>
+            <button type="submit">Randevu Al</button>
+        </form>`;
+
+    dashboardHtml += `<button onclick="mainPage()">Çıkış Yap</button>`;
+
+    document.body.innerHTML = dashboardHtml;
+}
+
+
+
+
+
+
+    </script>
+</head>
+<body>
+    <h1>Hastane Yönetim Sistemi</h1>
+    <button onclick="patientLoginForm()">Hasta Giriş</button>
+    <button onclick="loadPatientRegistrationForm()">Yeni Hasta Kaydı</button>
+    <button onclick="doctorLoginForm()">Doktor Giriş</button>
+    <button onclick="adminLogin()">Yönetici Giriş</button>
+
+</body>
+</html>
